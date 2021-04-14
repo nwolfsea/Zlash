@@ -1,5 +1,7 @@
 package com.br.Zlash.service;
 
+import com.br.Zlash.exceptions.ExcecaoCustomizada;
+import com.br.Zlash.exceptions.ObjetoNaoEncontroException;
 import com.br.Zlash.models.Saldo;
 import com.br.Zlash.repositories.SaldoRepository;
 import com.br.Zlash.services.SaldoService;
@@ -32,7 +34,7 @@ public class SaldoServiceTest {
     }
 
     @Test
-    public void testarBuscaDeSaldoPeloCPFCaminhaBom(){
+    public void testarBuscaDeSaldoPeloCPFCaminhoBom(){
         Optional<Saldo> optionalSaldo = Optional.of(this.saldoTeste);
         Mockito.when(saldoRepository.findById(Mockito.anyString())).thenReturn(optionalSaldo);
 
@@ -42,4 +44,28 @@ public class SaldoServiceTest {
 
         Assertions.assertEquals(saldo.getCpf(),"108.162.870-74" );
     }
+
+    @Test
+    public void testarBuscaDeSaldoPeloCPFCaminhoRuim(){
+        Optional<Saldo> optionalSaldo = Optional.empty();
+        Mockito.when(saldoRepository.findById(Mockito.anyString())).thenReturn(optionalSaldo);
+
+        ExcecaoCustomizada exception = Assertions.assertThrows(ObjetoNaoEncontroException.class, () -> {
+            saldoService.buscarPorCPF("hdfiahdui");
+        });
+
+        Assertions.assertEquals(400, exception.getStatusCode());
+        Assertions.assertEquals("Objeto não encontrado", exception.getMessage());
+    }
+
+    @Test
+    public void testarDebitarSaldo(){
+        Mockito.when(saldoRepository.save(Mockito.any(Saldo.class))).thenReturn(this.saldoTeste);
+        saldoService.debitarSaldo(this.saldoTeste, 100.00);
+
+        Assertions.assertEquals(900.00, this.saldoTeste.getValor() );
+    }
+
 }
+
+
